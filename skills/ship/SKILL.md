@@ -268,21 +268,30 @@ After the PR/MR is created, confirm the assignment and (optionally) post a revie
 
 ### Pick the channel
 
-Default channels to choose from:
+Default channels:
 
 - `#frontend_code_review` — UI / web / mobile PRs
 - `#backend_code_review` — services / APIs / infra / shared libs
 
-Auto-detection precedence:
+Precedence (short-circuit at the first hit):
 
-1. `--slack-channel <name>` explicit flag wins.
-2. Repo name heuristic: if the repo slug contains `frontend`, pick `#frontend_code_review`; if it contains `backend`, pick `#backend_code_review`.
-3. File-extension heuristic on the diff (`git diff --name-only main...HEAD`):
-   - ≥60% of changed files are `.ts/.tsx/.jsx/.vue/.css/.scss/.html/.svelte` → frontend channel
-   - ≥60% of changed files are `.py/.go/.rs/.java/.rb/.ex/.exs/.kt/.scala` → backend channel
-4. If neither heuristic is decisive → **ask the user**: *"Which channel should I ping: `#frontend_code_review` or `#backend_code_review`?"*
+1. `--slack-channel <name>` explicit flag — use it, no question asked.
+2. **Repo-name heuristic (only when unambiguous)**: if the repo slug contains the substring `frontend`, pick `#frontend_code_review`; if it contains `backend`, pick `#backend_code_review`. Do this only when one of the two substrings appears cleanly (e.g., `app-3commas-frontend`, `quantpilot-agentic-backend`) — don't guess from weaker signals like file extensions. `.ts` is ambiguous (Node backends use it too).
+3. Otherwise — **ask the user**. Don't guess.
 
-Always show the user the picked channel and give them a chance to change it before posting.
+The ask should be explicit and compact:
+
+```
+Which channel should the review request go to?
+  → #frontend_code_review
+  → #backend_code_review
+
+Reply with the channel name (# optional) or "skip" to not post.
+```
+
+If the user types a custom channel name (e.g., `#data-eng`), accept it. If they type `skip`, behave as if `--no-slack` was passed.
+
+Either way — auto-picked or asked — show the final channel before posting and let the user change it one last time if they want.
 
 ### Confirm assignee + reviewer
 
